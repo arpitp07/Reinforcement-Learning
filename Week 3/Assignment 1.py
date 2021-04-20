@@ -121,26 +121,99 @@ except:
         P_sim_total = P_sim_total + P_sim
     joblib.dump(P_sim_total, 'sim_probs.pkl');
 P_sim_probs = np.round(P_sim_total / np.sum(P_sim_total, axis=1), 4)
-P_sim_probs
+print(f'Transition likelihoods (simulated): \n\n{P_sim_probs}')
+print(f'\n\nTransition likelihoods (actual): \n\n{P}\n')
 # %%
 # Calculating total likelihood of the simulated sequence
 ll_total = 0
 for i in range(len(Y) - 1):
     ll_total += math.log(P_sim_probs.iloc[Y[i] - 1, Y[i + 1] - 1])
-math.e**ll_total
+print(f'Total likelihood = {math.e**ll_total}\n')
 # %% [markdown]
 # - Is this Markov chain stationary? Please provide detailed reasoning.
+#
+# No, this chain is not stationary, as initial state distribution changes when multiplied with the transition matrix
+# %%
+print(f'p = {p}\np*P = {[round(x, 4) for x in np.matmul(p, np.array(P))]}\n')
+# %% [markdown]
+# Initial state distribution to make the chain a stationary chain can be obtained as below:
+# %%
+eig_val_1_index = np.where(np.linalg.eig(P.T)[0] == 1)[
+    0][0]  # index of eigenvalue = 1
+eig_vec = np.linalg.eig(P.T)[1]  # all eigenvectors
+init_dist = []
+for ev in eig_vec:
+    init_dist.append(ev[eig_val_1_index] / np.sum(eig_vec[:, eig_val_1_index]))
+print(f'Initial state distribution for stationarity:\n{init_dist}\n')
 # %% [markdown]
 # - Is this Markov chain time homogeneous? Please provide detailed reasoning.
+#
+# Yes, the Markov chain is time homogenous, as the transition matrix does not depend on time. Also, the probability of going from state $i$ at time $t$ to state $j$ at time $t+1$ remains the same ($P_{i,j}$), no matter what happened before, i.e.
+# $$Prob[Y_{t+1}=j | Y_{t}=i] = P_{i,j}$$
 # %% [markdown]
 # **5\) Compute the expected number of transitions between any pair of transient states before transitioning to the absorbing state.**
+#
+# The expected number of transitions before reaching absorbing state from state $i$ to state $j$, can be obtained by solving the system of equations:
+# $$Z = I_{N_{k}\times N_{k}} + H_{N_{k}\times N_{k}}Z$$
+# Which is,
+# $$Z = (I_{N_{k}\times N_{k}} - H_{N_{k}\times N_{k}})^{-1}$$
+# %%
+H = P.drop(index='D', columns='D')
+Z = pd.DataFrame(np.linalg.inv(np.identity(
+    H.shape[0]) - H), index=H.index, columns=H.columns)
 # %% [markdown]
 # **6\) Compute the probability that a state $j$ will ever be reached from state $i$ (for all $i$ and $j$)**
+# %%
+Q = pd.DataFrame(np.zeros_like(H), index=H.index, columns=H.columns)
+for i in range(H.shape[0]):
+    for j in range(H.shape[1]):
+        Q.iloc[i, j] = (H.iloc[i, j] - 0) / H.iloc[j, j]
+print(f'Probabilities of ever reaching state j from state i: \n\n{Q}')
 # %% [markdown]
 # **7\) Compute the probability that a bond will reach:**
-#
+# %%
+
+
+def bond_steps(P, T, end):
+    N = P.shape[0]
+    f = np.zeros((T, N, N), dtype=np.float64)
+    Pbar = np.zeros((N, N, N), dtype=np.float64)
+
+    for i in range(0, N):
+        for j in range(0, N):
+            for k in range(0, N):
+                if k != i:
+                    Pbar[i, j, k] = P.iloc[j, k]
+                else:
+                    Pbar[i, j, k] = 0
+
+    for j in range(0, N):
+        for t in range(0, T):
+            if t == 0:
+                f[t, :, j] = P.iloc[:, j]
+            else:
+                f[t, :, j] = np.matmul(Pbar[j, :, :], f[t - 1, :, j])
+
+    f_final = np.zeros_like(f[0, :, 0])
+    for t in range(T):
+        f_final += f[t, :, end]
+
+    return f_final
+
+
+# %% [markdown]
 # - $AAA$ rating within $5$ periods given a current rating of $AAA, AA, A, BBB, BB, B, CCC$
-#
+# %%
+f_AAA = pd.DataFrame(bond_steps(P, 5, P.columns.get_loc(
+    'AAA')), index=P.index, columns=['Probability'])
+print(f'Probabilities of reaching AAA rating: \n\n{f_AAA}')
+# %% [markdown]
 # - $CCC$ rating within $5$ periods given a current rating of $AAA, AA, A, BBB, BB, B, CCC$
-#
+# %%
+f_CCC = pd.DataFrame(bond_steps(P, 5, P.columns.get_loc(
+    'CCC')), index=P.index, columns=['Probability'])
+print(f'Probabilities of reaching CCC rating: \n\n{f_CCC}')
+# %% [markdown]
 # - Use your intuition and guess whether $f_{i,i}<1$ or $f_{i,i}=1$ for each rating?
+#
+# For all states except $D$, $f_{i,i}<1$, as $D$ is an absorbing state, and eventually, each state will be visited for the last time. For $D$, $f_{i,i}=1$ as once $D$ is hit, the chain stays there forever.
