@@ -217,13 +217,15 @@ def bond_steps(P, T, end):
 # %%
 f_AAA = pd.DataFrame(bond_steps(P, 5, P.columns.get_loc(
     'AAA')), index=P.index, columns=['Probability'])
-print(f'Probabilities of reaching AAA rating: \n\n{f_AAA.drop(index="D")}')
+print(f'Probabilities of reaching AAA rating: \n\n')
+display(f_AAA.drop(index="D"))
 # %% [markdown]
 # - $CCC$ rating within $5$ periods given a current rating of $AAA, AA, A, BBB, BB, B, CCC$
 # %%
 f_CCC = pd.DataFrame(bond_steps(P, 5, P.columns.get_loc(
     'CCC')), index=P.index, columns=['Probability'])
-print(f'Probabilities of reaching CCC rating: \n\n{f_CCC.drop(index="D")}')
+print(f'Probabilities of reaching CCC rating: \n\n')
+display(f_CCC.drop(index="D"))
 # %% [markdown]
 # - Use your intuition and guess whether $f_{i,i}<1$ or $f_{i,i}=1$ for each rating?
 #
@@ -366,6 +368,12 @@ class pipeline:
             joblib.dump(self.allEpisodes, f'allEpisodes_{dir}.pkl')
             self.allStates = run_sim_states(p)
             joblib.dump(self.allStates, f'allStates_{dir}.pkl')
+        self.tmat = pd.crosstab(
+            self.allStates.observation, self.allStates.observation_next)
+        self.tmat = self.tmat.div(self.tmat.sum(axis=1), axis=0)
+        self.tmat.loc[float(-10)] = [1] + [0] * 20
+        self.tmat.loc[float(10)] = [0] * 20 + [1]
+        self.tmat.sort_index(inplace = True)
         self.perc = [.01, 0.05, .1, .25, .5, .75, .9, .95, .99]
 
     def print_pipeline(self):
@@ -395,6 +403,10 @@ class pipeline:
         plt.xticks(list(range(-9, 10)))
         plt.xlabel('Initial State, s0')
         plt.ylabel('Value Function, v(s0)')
+        plt.show()
+        print('\n' + '-' * 50 + '\n')
+        print('Simulated Transition Matrix:\n')
+        display(self.tmat)
 
 
 # %% [markdown]
