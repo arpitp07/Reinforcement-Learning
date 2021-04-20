@@ -14273,10 +14273,10 @@ a.anchor-link {
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p>1) Plot the n-step ahead probabilities, $P_{i,j}(n)$ for $n = 1,2,...,100$ for every $i$ and $j$ in $\{AAA, AA, A, BBB, BB, B, CCC, D\}$. Make sure to properly label each state based on the rating labels.</p>
+<p><strong>1) Plot the n-step ahead probabilities, $P_{i,j}(n)$ for $n = 1,2,...,100$ for every $i$ and $j$ in $\{AAA, AA, A, BBB, BB, B, CCC, D\}$. Make sure to properly label each state based on the rating labels.</strong></p>
 
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[1]:</div>
@@ -14288,37 +14288,13 @@ a.anchor-link {
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">from</span> <span class="nn">matplotlib.ticker</span> <span class="kn">import</span> <span class="n">FormatStrFormatter</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
-<span class="c1"># from IPython.core.interactiveshell import InteractiveShell</span>
-<span class="c1"># InteractiveShell.ast_node_interactivity = &quot;all&quot;</span>
 <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
-<span class="o">%</span><span class="k">pylab</span> inline
 <span class="o">%</span><span class="k">config</span> InlineBackend.figure_formats = [&#39;png&#39;]
 </pre></div>
 
      </div>
 </div>
 </div>
-</div>
-
-<div class="jp-Cell-outputWrapper">
-
-
-<div class="jp-OutputArea jp-Cell-outputArea">
-
-<div class="jp-OutputArea-child">
-
-    
-    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-
-
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>Populating the interactive namespace from numpy and matplotlib
-</pre>
-</div>
-</div>
-
-</div>
-
 </div>
 
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
@@ -14328,18 +14304,17 @@ a.anchor-link {
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Creating transition probability matrix</span>
-<span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">90.81</span><span class="p">,</span> <span class="mf">8.33</span><span class="p">,</span> <span class="mf">0.68</span><span class="p">,</span> <span class="mf">0.06</span><span class="p">,</span> <span class="mf">0.08</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">],</span>
-              <span class="p">[</span><span class="mf">0.70</span><span class="p">,</span> <span class="mf">90.65</span><span class="p">,</span> <span class="mf">7.79</span><span class="p">,</span> <span class="mf">0.64</span><span class="p">,</span> <span class="mf">0.06</span><span class="p">,</span> <span class="mf">0.13</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">],</span>
-              <span class="p">[</span><span class="mf">0.09</span><span class="p">,</span> <span class="mf">2.27</span><span class="p">,</span> <span class="mf">91.05</span><span class="p">,</span> <span class="mf">5.52</span><span class="p">,</span> <span class="mf">0.74</span><span class="p">,</span> <span class="mf">0.26</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.06</span><span class="p">],</span>
-              <span class="p">[</span><span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.33</span><span class="p">,</span> <span class="mf">5.95</span><span class="p">,</span> <span class="mf">85.93</span><span class="p">,</span> <span class="mf">5.30</span><span class="p">,</span> <span class="mf">1.17</span><span class="p">,</span> <span class="mf">1.12</span><span class="p">,</span> <span class="mf">0.18</span><span class="p">],</span>
-              <span class="p">[</span><span class="mf">0.03</span><span class="p">,</span> <span class="mf">0.14</span><span class="p">,</span> <span class="mf">0.67</span><span class="p">,</span> <span class="mf">7.73</span><span class="p">,</span> <span class="mf">80.53</span><span class="p">,</span> <span class="mf">8.84</span><span class="p">,</span> <span class="mf">1.00</span><span class="p">,</span> <span class="mf">1.06</span><span class="p">],</span>
-              <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.11</span><span class="p">,</span> <span class="mf">0.24</span><span class="p">,</span> <span class="mf">0.43</span><span class="p">,</span> <span class="mf">6.48</span><span class="p">,</span> <span class="mf">83.46</span><span class="p">,</span> <span class="mf">4.07</span><span class="p">,</span> <span class="mf">5.20</span><span class="p">],</span>
-              <span class="p">[</span><span class="mf">0.21</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.22</span><span class="p">,</span> <span class="mf">1.30</span><span class="p">,</span> <span class="mf">2.38</span><span class="p">,</span> <span class="mf">11.24</span><span class="p">,</span> <span class="mf">64.86</span><span class="p">,</span> <span class="mf">19.79</span><span class="p">],</span>
-              <span class="p">[</span><span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">100.00</span><span class="p">]],</span>
-             <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+<span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+    <span class="p">[</span><span class="mf">90.81</span><span class="p">,</span> <span class="mf">8.33</span><span class="p">,</span> <span class="mf">0.68</span><span class="p">,</span> <span class="mf">0.06</span><span class="p">,</span> <span class="mf">0.08</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">],</span>
+    <span class="p">[</span><span class="mf">0.70</span><span class="p">,</span> <span class="mf">90.65</span><span class="p">,</span> <span class="mf">7.79</span><span class="p">,</span> <span class="mf">0.64</span><span class="p">,</span> <span class="mf">0.06</span><span class="p">,</span> <span class="mf">0.13</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">],</span>
+    <span class="p">[</span><span class="mf">0.09</span><span class="p">,</span> <span class="mf">2.27</span><span class="p">,</span> <span class="mf">91.05</span><span class="p">,</span> <span class="mf">5.52</span><span class="p">,</span> <span class="mf">0.74</span><span class="p">,</span> <span class="mf">0.26</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.06</span><span class="p">],</span>
+    <span class="p">[</span><span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.33</span><span class="p">,</span> <span class="mf">5.95</span><span class="p">,</span> <span class="mf">85.93</span><span class="p">,</span> <span class="mf">5.30</span><span class="p">,</span> <span class="mf">1.17</span><span class="p">,</span> <span class="mf">1.12</span><span class="p">,</span> <span class="mf">0.18</span><span class="p">],</span>
+    <span class="p">[</span><span class="mf">0.03</span><span class="p">,</span> <span class="mf">0.14</span><span class="p">,</span> <span class="mf">0.67</span><span class="p">,</span> <span class="mf">7.73</span><span class="p">,</span> <span class="mf">80.53</span><span class="p">,</span> <span class="mf">8.84</span><span class="p">,</span> <span class="mf">1.00</span><span class="p">,</span> <span class="mf">1.06</span><span class="p">],</span>
+    <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.11</span><span class="p">,</span> <span class="mf">0.24</span><span class="p">,</span> <span class="mf">0.43</span><span class="p">,</span> <span class="mf">6.48</span><span class="p">,</span> <span class="mf">83.46</span><span class="p">,</span> <span class="mf">4.07</span><span class="p">,</span> <span class="mf">5.20</span><span class="p">],</span>
+    <span class="p">[</span><span class="mf">0.21</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.22</span><span class="p">,</span> <span class="mf">1.30</span><span class="p">,</span> <span class="mf">2.38</span><span class="p">,</span> <span class="mf">11.24</span><span class="p">,</span> <span class="mf">64.86</span><span class="p">,</span> <span class="mf">19.79</span><span class="p">],</span>
+    <span class="p">[</span><span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">100.00</span><span class="p">]],</span>
+    <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 <span class="n">P</span> <span class="o">=</span> <span class="n">P</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="c1"># with np.printoptions(precision=4, suppress=True):</span>
-<span class="c1"># print(P)</span>
 <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;AAA&#39;</span><span class="p">,</span> <span class="s1">&#39;AA&#39;</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;BBB&#39;</span><span class="p">,</span> <span class="s1">&#39;BB&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="s1">&#39;CCC&#39;</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">]</span>
 <span class="n">P</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
 <span class="n">P</span>
@@ -14500,10 +14475,9 @@ a.anchor-link {
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">T</span> <span class="o">=</span> <span class="mi">100</span>
 <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
 <span class="n">P_cumulative</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">T</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
-
 <span class="n">P_cumulative</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">P</span>
-<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">T</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
-    <span class="n">P_cumulative</span><span class="p">[</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">P_cumulative</span><span class="p">[</span><span class="n">t</span><span class="p">],</span> <span class="n">P</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">T</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+    <span class="n">P_cumulative</span><span class="p">[</span><span class="n">t</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">P_cumulative</span><span class="p">[</span><span class="n">t</span><span class="p">],</span> <span class="n">P</span><span class="p">)</span>
 </pre></div>
 
      </div>
@@ -14517,7 +14491,7 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">P</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">P</span><span class="p">),</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">));</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">P</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">P</span><span class="p">),</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">));</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">P</span><span class="p">)):</span>
     <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">P</span><span class="p">)):</span>
         <span class="n">axs</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">P_cumulative</span><span class="p">[:,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]);</span>
@@ -14557,6 +14531,154 @@ a.anchor-link {
 
 </div>
 
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong>2) Group all states into classes. Report the classes and the total number of classes. Explain your answer.</strong></p>
+<p>The states can be grouped into 2 classes:</p>
+<ul>
+<li>$\{AAA, AA, A, BBB, BB, B, CCC\}$</li>
+<li><p>$\{D\}$</p>
+<p>All the states communicate with each other except for D, which is an absorbing state. State $CCC$ doesn't communicate with state $AA$ in a single step, but does so in multiple steps.</p>
+</li>
+</ul>
+
+</div>
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong>3) What is the periodicity of the transition probability matrix? Explain your </strong>answer.</p>
+<p>All the states have access to themselves in a single step, so the periodicity of the transition matrix is $d = 1$. In other words, the chain is aperiodic.</p>
+
+</div>
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong>4) Construct a 100-step simulation for a bond rating assuming an initial $AAA$ rating and the above transition matrix.</strong></p>
+
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[5]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># simulate from uniform[0,1]</span>
+<span class="n">K</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">U</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">K</span><span class="p">)</span>
+<span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">P</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+<span class="n">S</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">9</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">P</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+<span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">U</span><span class="p">:</span>
+    <span class="c1"># simulation of initial values</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">S</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="n">u</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="n">S</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="n">u</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">Y</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+    <span class="c1"># simulation of the transitions</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="n">S</span><span class="p">[</span><span class="n">P</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="n">u</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">Y</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">j</span>
+    <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">j</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<ul>
+<li>Plot the sequence of transitions as a step function of time.</li>
+</ul>
+
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[6]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Y</span><span class="p">);</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">);</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Time, t&#39;</span><span class="p">);</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;State&#39;</span><span class="p">);</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;$Y_</span><span class="si">{t}</span><span class="s1">$&#39;</span><span class="p">);</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+
+
+
+
+<div class="jp-RenderedImage jp-OutputArea-output ">
+<img src="data:image/png;base64,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
+"
+>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<ul>
+<li><p>Report the likehood of each transition and the likelihood of the entire simulated sequence.</p>
+</li>
+<li><p>Is this Markov chain stationary? Please provide detailed reasoning.</p>
+</li>
+<li><p>Is this Markov chain time homogeneous? Please provide detailed reasoning.</p>
+</li>
+</ul>
+
+</div>
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong>5) Compute the expected number of transitions between any pair of transient states before transitioning to the absorbing state.</strong></p>
+
+</div>
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong>6) Compute the probability that a state $j$ will ever be reached from state $i$ (for all $i$ and $j$)</strong></p>
+
+</div>
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong>7) Compute the probability that a bond will reach:</strong></p>
+<ul>
+<li><p>$AAA$ rating within $5$ periods given a current rating of $AAA, AA, A, BBB, BB, B, CCC$</p>
+</li>
+<li><p>$CCC$ rating within $5$ periods given a current rating of $AAA, AA, A, BBB, BB, B, CCC$</p>
+</li>
+<li><p>Use your intuition and guess whether $f_{i,i}&lt;1$ or $f_{i,i}=1$ for each rating?</p>
+</li>
+</ul>
+
+</div>
 </div>
 </body>
 
