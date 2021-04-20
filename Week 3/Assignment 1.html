@@ -14279,13 +14279,15 @@ a.anchor-link {
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[1]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[2]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Importing modules</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">joblib</span>
+<span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">from</span> <span class="nn">matplotlib.ticker</span> <span class="kn">import</span> <span class="n">FormatStrFormatter</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
@@ -14300,7 +14302,7 @@ a.anchor-link {
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[2]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[3]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Creating transition probability matrix</span>
@@ -14333,7 +14335,7 @@ a.anchor-link {
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[2]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[3]:</div>
 
 
 
@@ -14469,7 +14471,7 @@ a.anchor-link {
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[3]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">T</span> <span class="o">=</span> <span class="mi">100</span>
@@ -14488,7 +14490,7 @@ a.anchor-link {
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[4]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[5]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">P</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">P</span><span class="p">),</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">));</span>
@@ -14547,7 +14549,7 @@ a.anchor-link {
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p><strong>3) What is the periodicity of the transition probability matrix? Explain your </strong>answer.</p>
+<p><strong>3) What is the periodicity of the transition probability matrix? Explain your answer.</strong></p>
 <p>All the states have access to themselves in a single step, so the periodicity of the transition matrix is $d = 1$. In other words, the chain is aperiodic.</p>
 
 </div>
@@ -14560,28 +14562,39 @@ a.anchor-link {
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[5]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[6]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># simulate from uniform[0,1]</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Function to simulate markov chain from uniform[0,1]</span>
+
+
+<span class="k">def</span> <span class="nf">MC_sim</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">U</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">K</span><span class="p">)</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">P</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">P_sim</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">P</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">P</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">P</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">U</span><span class="p">:</span>
+        <span class="c1"># simulation of initial values</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">S</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="n">u</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">S</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="n">u</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">Y</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="c1"># simulation of the transitions</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">S</span><span class="p">[</span><span class="n">P</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="n">u</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">Y</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">j</span>
+        <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">P_sim</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">j</span>
+    <span class="k">return</span> <span class="n">Y</span><span class="p">,</span> <span class="n">P_sim</span>
+
+
 <span class="n">K</span> <span class="o">=</span> <span class="mi">100</span>
-<span class="n">U</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">K</span><span class="p">)</span>
-<span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
-<span class="n">p</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">P</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
 <span class="n">S</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">9</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">P</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
-<span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">U</span><span class="p">:</span>
-    <span class="c1"># simulation of initial values</span>
-    <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">i</span> <span class="o">=</span> <span class="n">S</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="n">u</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">j</span> <span class="o">=</span> <span class="n">S</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="n">u</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">Y</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
-    <span class="c1"># simulation of the transitions</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">j</span> <span class="o">=</span> <span class="n">S</span><span class="p">[</span><span class="n">P</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="n">u</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">Y</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">j</span>
-    <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
-    <span class="n">i</span> <span class="o">=</span> <span class="n">j</span>
+<span class="n">p</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="n">Y</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">MC_sim</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
 </pre></div>
 
      </div>
@@ -14600,7 +14613,7 @@ a.anchor-link {
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[6]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[7]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Y</span><span class="p">);</span>
@@ -14629,7 +14642,7 @@ a.anchor-link {
 
 
 <div class="jp-RenderedImage jp-OutputArea-output ">
-<img src="data:image/png;base64,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
+<img src="data:image/png;base64,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
 "
 >
 </div>
@@ -14644,12 +14657,231 @@ a.anchor-link {
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
 <ul>
-<li><p>Report the likehood of each transition and the likelihood of the entire simulated sequence.</p>
-</li>
-<li><p>Is this Markov chain stationary? Please provide detailed reasoning.</p>
-</li>
-<li><p>Is this Markov chain time homogeneous? Please provide detailed reasoning.</p>
-</li>
+<li>Report the likehood of each transition and the likelihood of the entire simulated sequence.</li>
+</ul>
+
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[8]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Load simulated matrix from disk if it exists, create it if it doesn&#39;t</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">P_sim_total</span> <span class="o">=</span> <span class="n">joblib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;sim_probs.pkl&#39;</span><span class="p">)</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="c1"># Running 10000 simulations with 100 steps</span>
+    <span class="n">P_sim_total</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span>
+        <span class="n">P</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">P</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">P</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10000</span><span class="p">):</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">P_sim</span> <span class="o">=</span> <span class="n">MC_sim</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">P_sim_total</span> <span class="o">=</span> <span class="n">P_sim_total</span> <span class="o">+</span> <span class="n">P_sim</span>
+    <span class="n">joblib</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">P_sim_total</span><span class="p">,</span> <span class="s1">&#39;sim_probs.pkl&#39;</span><span class="p">);</span>
+<span class="n">P_sim_probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">P_sim_total</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">P_sim_total</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">P_sim_probs</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[8]:</div>
+
+
+
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>AAA</th>
+      <th>AA</th>
+      <th>A</th>
+      <th>BBB</th>
+      <th>BB</th>
+      <th>B</th>
+      <th>CCC</th>
+      <th>D</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>AAA</th>
+      <td>0.9151</td>
+      <td>0.0627</td>
+      <td>0.0038</td>
+      <td>0.0005</td>
+      <td>0.0018</td>
+      <td>0.0007</td>
+      <td>0.0009</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <th>AA</th>
+      <td>0.0084</td>
+      <td>0.9057</td>
+      <td>0.0570</td>
+      <td>0.0091</td>
+      <td>0.0018</td>
+      <td>0.0044</td>
+      <td>0.0028</td>
+      <td>0.0001</td>
+    </tr>
+    <tr>
+      <th>A</th>
+      <td>0.0014</td>
+      <td>0.0318</td>
+      <td>0.9105</td>
+      <td>0.1009</td>
+      <td>0.0277</td>
+      <td>0.0118</td>
+      <td>0.0018</td>
+      <td>0.0006</td>
+    </tr>
+    <tr>
+      <th>BBB</th>
+      <td>0.0002</td>
+      <td>0.0024</td>
+      <td>0.0327</td>
+      <td>0.8579</td>
+      <td>0.1121</td>
+      <td>0.0289</td>
+      <td>0.1295</td>
+      <td>0.0011</td>
+    </tr>
+    <tr>
+      <th>BB</th>
+      <td>0.0001</td>
+      <td>0.0004</td>
+      <td>0.0016</td>
+      <td>0.0367</td>
+      <td>0.8078</td>
+      <td>0.1028</td>
+      <td>0.0517</td>
+      <td>0.0025</td>
+    </tr>
+    <tr>
+      <th>B</th>
+      <td>0.0001</td>
+      <td>0.0004</td>
+      <td>0.0005</td>
+      <td>0.0016</td>
+      <td>0.0537</td>
+      <td>0.8359</td>
+      <td>0.1776</td>
+      <td>0.0108</td>
+    </tr>
+    <tr>
+      <th>CCC</th>
+      <td>0.0002</td>
+      <td>0.0000</td>
+      <td>0.0001</td>
+      <td>0.0013</td>
+      <td>0.0048</td>
+      <td>0.0255</td>
+      <td>0.6466</td>
+      <td>0.0093</td>
+    </tr>
+    <tr>
+      <th>D</th>
+      <td>0.0000</td>
+      <td>0.0000</td>
+      <td>0.0000</td>
+      <td>0.0000</td>
+      <td>0.0000</td>
+      <td>0.0000</td>
+      <td>0.0000</td>
+      <td>1.0000</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[9]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Calculating total likelihood of the simulated sequence</span>
+<span class="n">ll_total</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+    <span class="n">ll_total</span> <span class="o">+=</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">P_sim_probs</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">Y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">Y</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">math</span><span class="o">.</span><span class="n">e</span><span class="o">**</span><span class="n">ll_total</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[9]:</div>
+
+
+
+
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain">
+<pre>2.3944673039302478e-18</pre>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<ul>
+<li>Is this Markov chain stationary? Please provide detailed reasoning.</li>
+</ul>
+
+</div>
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<ul>
+<li>Is this Markov chain time homogeneous? Please provide detailed reasoning.</li>
 </ul>
 
 </div>

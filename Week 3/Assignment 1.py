@@ -16,6 +16,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import joblib
+import math
 from matplotlib.ticker import FormatStrFormatter
 import warnings
 warnings.filterwarnings('ignore')
@@ -67,7 +68,9 @@ for i in range(len(P)):
 # %% [markdown]
 # **4) Construct a 100-step simulation for a bond rating assuming an initial $AAA$ rating and the above transition matrix.**
 # %%
-# simulate from uniform[0,1]
+# Function to simulate markov chain from uniform[0,1]
+
+
 def MC_sim(K, S, p, P, seed=0):
     np.random.seed(seed)
     U = np.random.uniform(low=0.0, high=1.0, size=K)
@@ -86,9 +89,10 @@ def MC_sim(K, S, p, P, seed=0):
             j = S[P.cumsum(axis=1).iloc[i - 1, :].ge(u)][0]
             Y[k] = j
         k += 1
-        P_sim.iloc[i-1, j-1]+=1
+        P_sim.iloc[i - 1, j - 1] += 1
         i = j
     return Y, P_sim
+
 
 K = 100
 S = pd.Series(range(1, 9), index=P.index)
@@ -105,19 +109,28 @@ plt.title('$Y_{t}$');
 # %% [markdown]
 # - Report the likehood of each transition and the likelihood of the entire simulated sequence.
 # %%
-# Running 10000 simulations with 100 steps
+# Load simulated matrix from disk if it exists, create it if it doesn't
 try:
     P_sim_total = joblib.load('sim_probs.pkl')
 except:
-    P_sim_total = pd.DataFrame(np.zeros_like(P), index=P.index, columns=P.columns)
+    # Running 10000 simulations with 100 steps
+    P_sim_total = pd.DataFrame(np.zeros_like(
+        P), index=P.index, columns=P.columns)
     for i in range(10000):
         _, P_sim = MC_sim(K, S, p, P, None)
         P_sim_total = P_sim_total + P_sim
     joblib.dump(P_sim_total, 'sim_probs.pkl');
 P_sim_probs = np.round(P_sim_total / np.sum(P_sim_total, axis=1), 4)
+P_sim_probs
+# %%
+# Calculating total likelihood of the simulated sequence
+ll_total = 0
+for i in range(len(Y) - 1):
+    ll_total += math.log(P_sim_probs.iloc[Y[i] - 1, Y[i + 1] - 1])
+math.e**ll_total
 # %% [markdown]
 # - Is this Markov chain stationary? Please provide detailed reasoning.
-
+# %% [markdown]
 # - Is this Markov chain time homogeneous? Please provide detailed reasoning.
 # %% [markdown]
 # **5\) Compute the expected number of transitions between any pair of transient states before transitioning to the absorbing state.**
