@@ -14,13 +14,18 @@
 # Importing modules
 import numpy as np
 import pandas as pd
+from IPython.display import display
 import matplotlib.pyplot as plt
 import joblib
 import math
+import gym
+from gym import spaces
+import random
 from matplotlib.ticker import FormatStrFormatter
 import warnings
 warnings.filterwarnings('ignore')
 %config InlineBackend.figure_formats = ['png']
+%matplotlib inline
 # %%
 # Creating transition probability matrix
 P = np.array([
@@ -121,8 +126,11 @@ except:
         P_sim_total = P_sim_total + P_sim
     joblib.dump(P_sim_total, 'sim_probs.pkl');
 P_sim_probs = np.round(P_sim_total / np.sum(P_sim_total, axis=1), 4)
-print(f'Transition likelihoods (simulated): \n\n{P_sim_probs}')
-print(f'\n\nTransition likelihoods (actual): \n\n{P}\n')
+print(f'Transition likelihoods (simulated): \n\n')
+display(P_sim_probs)
+print(f'\n\nTransition likelihoods (actual): \n\n')
+display(P)
+print('\n')
 # %%
 # Calculating total likelihood of the simulated sequence
 ll_total = 0
@@ -161,14 +169,17 @@ print(f'Initial state distribution for stationarity:\n{init_dist}\n')
 H = P.drop(index='D', columns='D')
 Z = pd.DataFrame(np.linalg.inv(np.identity(
     H.shape[0]) - H), index=H.index, columns=H.columns)
+print(f'Expected number of transitions before reaching absorbing state: \n\n')
+display(Z)
 # %% [markdown]
 # **6\) Compute the probability that a state $j$ will ever be reached from state $i$ (for all $i$ and $j$)**
 # %%
-Q = pd.DataFrame(np.zeros_like(H), index=H.index, columns=H.columns)
-for i in range(H.shape[0]):
-    for j in range(H.shape[1]):
-        Q.iloc[i, j] = (H.iloc[i, j] - 0) / H.iloc[j, j]
-print(f'Probabilities of ever reaching state j from state i: \n\n{Q}')
+Q = pd.DataFrame(np.zeros_like(Z), index=Z.index, columns=Z.columns)
+for i in range(Z.shape[0]):
+    for j in range(Z.shape[1]):
+        Q.iloc[i, j] = (Z.iloc[i, j] - (1 if i == j else 0)) / Z.iloc[j, j]
+print(f'Probabilities of ever reaching state j from state i: \n\n')
+display(Q)
 # %% [markdown]
 # **7\) Compute the probability that a bond will reach:**
 # %%
@@ -206,14 +217,210 @@ def bond_steps(P, T, end):
 # %%
 f_AAA = pd.DataFrame(bond_steps(P, 5, P.columns.get_loc(
     'AAA')), index=P.index, columns=['Probability'])
-print(f'Probabilities of reaching AAA rating: \n\n{f_AAA}')
+print(f'Probabilities of reaching AAA rating: \n\n{f_AAA.drop(index="D")}')
 # %% [markdown]
 # - $CCC$ rating within $5$ periods given a current rating of $AAA, AA, A, BBB, BB, B, CCC$
 # %%
 f_CCC = pd.DataFrame(bond_steps(P, 5, P.columns.get_loc(
     'CCC')), index=P.index, columns=['Probability'])
-print(f'Probabilities of reaching CCC rating: \n\n{f_CCC}')
+print(f'Probabilities of reaching CCC rating: \n\n{f_CCC.drop(index="D")}')
 # %% [markdown]
 # - Use your intuition and guess whether $f_{i,i}<1$ or $f_{i,i}=1$ for each rating?
 #
-# For all states except $D$, $f_{i,i}<1$, as $D$ is an absorbing state, and eventually, each state will be visited for the last time. For $D$, $f_{i,i}=1$ as once $D$ is hit, the chain stays there forever.
+# For all states except $D$, $f_{i,i}<1$, as $D$ is an absorbing state, and eventually, every other transient state will be visited for the last time. For $D$, $f_{i,i}=1$ as once $D$ is hit, the chain stays there forever.
+# %% [markdown]
+# ## Part 1 - Mobile robot
+#
+# Consider the mobile robot problem described in section 2.5 in the “Introduction” lecture. Note that the results will differ from those in the lecture since the data is simulated.
+# %%
+# Creating environment
+
+
+class Segment:  # (gym.Env):
+    def __init__(self, numActions, startObservation, p, terminal, done):
+        self.numActions = numActions
+        self.observation = startObservation
+        self.p = p
+        self.terminal = terminal
+        self.action_space = spaces.Discrete(
+            self.numActions)  # {0:left, 1:right}
+        self.observation_space = spaces.Discrete(2 * self.terminal + 1)
+        self.done = done
+
+    def step(self, action):
+        assert self.action_space.contains(action)
+        assert self.observation_space.contains(self.observation)
+        assert self.action_space.n == 2
+        assert self.observation != 0
+        assert self.observation != (2 * self.terminal)
+        observation = self.observation
+        done = self.done
+        if action == 0:
+            observation_next = observation + \
+                np.random.choice([-1, 1], p=[self.p, 1 - self.p])
+        elif action == 1:
+            observation_next = observation + \
+                np.random.choice([-1, 1], p=[1 - self.p, self.p])
+        if observation_next == (2 * self.terminal):
+            done = True
+        elif observation_next == 0:
+            done = True
+        self.done = done
+        self.observation = observation_next
+        reward = self.rewards(observation, observation_next, action)
+        return [self.observation, reward, done]
+
+    def rewards(self, observation, observation_next, action):
+        if observation_next == (2 * self.terminal):
+            reward = 1.0
+        elif observation_next == 0:
+            reward = -1.0
+        else:
+            reward = -0.05
+        return reward
+
+    def reset(self):
+        observation = self.startObservation
+        self.observation = observation
+        self.done = False
+        return observation
+
+
+def policy(observation, p):
+    action = 1 if random.random() <= p else 0
+    return np.int(action)
+# %%
+
+
+def run_sim(p, o=10):
+    np.random.seed = 0
+    t = 0
+    tMAX = 50
+    done = False
+    observation = np.int(o)
+    observations = [observation]
+    rewards = []
+    actions = []
+
+    env = Segment(
+        numActions=2, startObservation=observation,
+        p=0.8, terminal=10, done=False)
+    while t < tMAX and done == False:
+        action = policy(observation=observation, p=p)
+        observation_next, reward, done = env.step(action=action)
+        observations.append(observation_next)
+        rewards.append(reward)
+        actions.append(action)
+        observation = observation_next
+        t += 1
+
+    dta = pd.DataFrame([
+        range(0, t),
+        observations[0:t],
+        observations[1:(t + 1)],
+        actions[0:t],
+        rewards]).transpose()
+
+    dta.columns = ['t', 'observation', 'observation_next', 'action', 'reward']
+    dta['observation'] = dta['observation'] - 10
+    dta['observation_next'] = dta['observation_next'] - 10
+    dta['beta'] = 0.98
+    dta['beta^t'] = dta['beta']**dta['t']
+    dta['beta^t_reward'] = dta['beta^t'] * dta['reward']
+
+    return dta
+
+# %%
+
+
+def run_sim_episode(p, o=10):
+    allEpisodes = pd.DataFrame()
+    for e in range(1000):
+        dta = run_sim(p, o)
+        dta.insert(0, 'episode', [e] * len(dta), True)
+        allEpisodes = allEpisodes.append(dta, ignore_index=True)
+    return allEpisodes
+# %%
+
+
+def run_sim_states(p):
+    allStates = pd.DataFrame()
+    for o in range(1, 20):
+        dta = run_sim_episode(p, o)
+        dta.insert(0, 'initial', [o - 10] * len(dta), True)
+        allStates = allStates.append(dta, ignore_index=True)
+    return allStates
+# %%
+
+
+class pipeline:
+    def __init__(self, p, dir):
+        try:
+            self.dta = joblib.load(f'dta_{dir}.pkl')
+            self.allEpisodes = joblib.load(f'allEpisodes_{dir}.pkl')
+            self.allStates = joblib.load(f'allStates_{dir}.pkl')
+        except:
+            self.dta = run_sim(p)
+            joblib.dump(self.dta, f'dta_{dir}.pkl')
+            self.allEpisodes = run_sim_episode(p)
+            joblib.dump(self.allEpisodes, f'allEpisodes_{dir}.pkl')
+            self.allStates = run_sim_states(p)
+            joblib.dump(self.allStates, f'allStates_{dir}.pkl')
+        self.perc = [.01, 0.05, .1, .25, .5, .75, .9, .95, .99]
+
+    def print_pipeline(self):
+        print(f'Table 2.1:\n')
+        display(self.dta)
+        print(
+            f'\nTotal discounted reward = {np.sum(self.dta["beta^t_reward"])}')
+        print('\n' + '-' * 50 + '\n')
+        print('Figure 2.2:\n')
+        self.allEpisodes[['episode', 'beta^t_reward']
+                         ].groupby(by='episode').sum().hist(grid=False)
+        plt.pause(1)
+        print('\n' + '-' * 50 + '\n')
+        print('Table 2.4:\n')
+        display(self.allEpisodes[['episode', 'beta^t_reward']].groupby(
+            by='episode').sum().describe(self.perc))
+        print('\n' + '-' * 50 + '\n')
+        print('Table 2.6:\n')
+        temp = self.allStates[['initial', 'episode', 'beta^t_reward']].groupby(
+            by=['initial', 'episode']).sum().droplevel(level='episode')
+        display(temp.groupby('initial').describe())
+        print('\n' + '-' * 50 + '\n')
+        print('Figure 2.3:\n')
+        plt.pause(1)
+        plt.scatter(x=temp.groupby('initial').mean().index,
+                    y=temp.groupby('initial').mean().values)
+        plt.xticks(list(range(-9, 10)))
+        plt.xlabel('Initial State, s0')
+        plt.ylabel('Value Function, v(s0)')
+
+
+# %% [markdown]
+# 1\) Under the “always try to go right” policy:
+#
+# rerun the code and recreate table 2.1, 2.4, and 2.6
+# recreate figures 2.2 and 2.3
+# construct the transition probability matrix
+# %%
+always_right = pipeline(1, 'right')
+always_right.print_pipeline()
+# %% [markdown]
+# 2\) Under the “always try to go left policy:
+#
+# rerun the code and recreate table 2.1, 2.4, and 2.6
+# recreate figures 2.2 and 2.3
+# construct the transition probability matrix
+# %%
+always_left = pipeline(0, 'left')
+always_left.print_pipeline()
+# %% [markdown]
+# 3) Under a policy that “tries to go left” with $50%$ probability and “tries to go right” with $50%$ probability:
+#
+# rerun the code and recreate table 2.1, 2.4, and 2.6
+# recreate figures 2.2 and 2.3
+# construct the transition probability matrix
+# %%
+half_half = pipeline(0.5, 'half')
+half_half.print_pipeline()
