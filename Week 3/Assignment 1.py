@@ -24,8 +24,6 @@ import random
 from matplotlib.ticker import FormatStrFormatter
 import warnings
 warnings.filterwarnings('ignore')
-%config InlineBackend.figure_formats = ['png']
-%matplotlib inline
 # %%
 # Creating transition probability matrix
 P = np.array([
