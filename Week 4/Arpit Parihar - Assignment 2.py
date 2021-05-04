@@ -1,7 +1,7 @@
 # %% [markdown]
 # # Reinforcement Learning - Assignment 2
 # ## Arpit Parihar
-# ## 04/19/2021
+# ## 05/04/2021
 # ****
 # %% [markdown]
 # A child has available a certain number of ice cream scoops every day, $s$. The child can store a number of scoops for the next day $a$ and eat the remainder scoops $c = s − a$. Mathematically,
@@ -104,9 +104,95 @@ for i in range(len(states)):
     plot_data[row, column] = v.iloc[-1, i]
 
 plt.plot(plot_data)
-plt.xlabel('s')
-plt.xticks(ticks=range(5))
+plt.xlabel('Scoops Available, s')
+plt.xticks(ticks=s)
 plt.ylabel('Expected Value')
 plt.legend(e)
 plt.title('Average Value for each s and e')
 plt.show();
+# %% [markdown]
+# **For each $e$, plot the optimal policy for storing ice cream scoops $a(s,e)$ with $s$ on the x-axis. (hint: there should be 3 lines plots, one for each $e\in\{0,1,2\}$).**
+# %%
+plot_data = np.zeros((len(s), len(e)))
+for i in range(len(states)):
+    row = eval(d.iloc[-1].index[i])[0]
+    column = eval(d.iloc[-1].index[i])[1]
+    plot_data[row, column] = d.iloc[-1, i]
+
+plt.plot(plot_data)
+plt.xlabel('Scoops Available, s')
+plt.xticks(ticks=s)
+plt.ylabel('Optimal Policy - Scoops Saved')
+plt.yticks(a)
+plt.legend(e)
+plt.title('Scoops Available vs Scoops Saved')
+plt.show();
+# %% [markdown]
+# - **For each $e$, plot the optimal policy for consuming ice cream scoops $c(s,e)$ with $s$ on the x-axis. (hint: there should be 3 lines plots, one for each $e\in\{0,1,2\}$).**
+# %%
+plot_data = np.zeros((len(s), len(e)))
+for i in range(len(states)):
+    row = eval(d.iloc[-1].index[i])[0]
+    column = eval(d.iloc[-1].index[i])[1]
+    plot_data[row, column] = row - d.iloc[-1, i]
+
+plt.plot(plot_data)
+plt.xlabel('Scoops Available, s')
+plt.xticks(ticks=s)
+plt.ylabel('Optimal Policy - Scoops Eaten')
+plt.yticks(a)
+plt.legend(e)
+plt.title('Scoops Available vs Scoops Eaten')
+plt.show();
+# %% [markdown]
+# - **Simulate a sequence of $e$ and set an initial value for $s$. Given the optimal policy, calculate and plot the evolution of $a, c,$ and $s$ over time.**
+# %%
+try:
+    sim_data = joblib.load('sim_data.pkl')
+except:
+    p_e_dat = pd.DataFrame(p_e)
+    T = 100
+    sim_data = pd.DataFrame(np.zeros((T*T, 5), dtype=np.float64),
+                            columns = ['State', 'a', 'c', 'State_new', 'Reward'])
+    for i in range(T):
+        state = random.choice(['(0, 1)', '(0, 2)', '(1, 2)', '(3, 0)', '(4, 0)', '(4, 1)'])
+        for j in range(T):
+            s_sim = eval(state)[0]
+            e_sim = eval(state)[1]
+            a_sim = d.iloc[-1][state]
+            
+            c_sim = s_sim - a_sim
+            r_sim = np.log(c_sim + 1)
+            
+            rand_num = np.random.uniform(low=0.0, high=1.0)
+            e_new = pd.Series(e)[p_e_dat.iloc[e_sim, :].cumsum().ge(rand_num)].iloc[0]
+            s_new = a_sim + e_new
+            state_new = f'({int(s_new)}, {int(e_new)})'
+            
+            sim_data.iloc[i*T+j, :] = [state, a_sim, c_sim, state_new, r_sim]
+            state = state_new
+    joblib.dump(sim_data, 'sim_data.pkl')
+
+# %%
+plt.plot(sim_data['a']);
+# %%
+plt.plot(sim_data['c']);
+# %%
+plt.plot([eval(x)[0] for x in sim_data['State']]);
+# %% [markdown]
+# - **Construct the transition probability and reward matrices between $(s,e)$ and $(s′,e′)$ that produces the highest expected discount rewards. (hint: you need to use the optimal policy)**
+# %%
+P_sim = pd.crosstab(sim_data['State'], sim_data['State_new']).div(pd.crosstab(sim_data['State'], sim_data['State_new']).sum(axis=1), axis=0)
+P_sim[[x for x in states if x not in P_sim.columns]] = 0
+P_sim = P_sim[states]
+# %% [markdown]
+# - **Calculate the value function for the Markok process with rewards that produces the highest expected discount rewards. (hint: use the transition probability and reward matrices from the previous question). Does the value function matches reasonably the value function from the previous question? (hint: it should)**
+# %%
+
+# %% [markdown]
+# - **Simulate the Markov process with rewards from the previous question for starting at each state pair $(e,s)$. Compute the average discounted reward. Does it match reasonabily close to the value function in the previous question? (hint: it should)**
+# %%
+
+# %% [markdown]
+# - **Calculate the optimal policy based on the policy iteration approach.**
+# %%
