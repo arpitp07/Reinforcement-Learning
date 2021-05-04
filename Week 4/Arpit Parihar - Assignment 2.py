@@ -40,16 +40,18 @@ s = [0, 1, 2, 3, 4]
 e = [0, 1, 2]
 a = [0, 1, 2]
 
-p_e = np.array(
+p_e = np.array([
     [0.8, 0.1, 0.1],
     [0.01, 0.98, 0.01],
-    [0.1, 0.1, 0.8],
+    [0.1, 0.1, 0.8]],
     dtype=float
 )
 
-P = np.zeros(len(s)*len(e), len(s)*len(e), len(a))
+P = np.zeros((len(a), len(s)*len(e), len(s)*len(e)), dtype=np.float64)
+R = np.zeros((len(a), len(s)*len(e), len(s)*len(e)), dtype=np.float64)
 
 for i in a:
-    for j in s:
-        for k in e:
-            
+    for j in range(len(s)*len(e)):
+            P[i, j, (i+0*(len(s)+1), i+1*(len(s)+1), i+2*(len(s)+1))] = p_e[j//len(s)]
+            R[i, j, :] = math.log(j%len(s) - i + 1) if j%len(s) - i >= 0 else -math.inf
+# %%
