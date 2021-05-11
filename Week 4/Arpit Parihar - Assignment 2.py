@@ -81,6 +81,7 @@ for i in a:
         q[i, j] = np.nan_to_num(np.dot(P[i, j, :], R[i, j, :]), nan=-math.inf)
 
 T = 600
+beta = 0.98
 v = np.zeros((len(states), T + 1),dtype=np.float64)
 d = np.zeros((len(states), T + 1),dtype=np.float64)
 
@@ -88,7 +89,7 @@ for t in range(1, T + 1):
     for i in range(len(states)):
         rhs = np.zeros(len(a), dtype=np.float64)
         for j in a:
-            rhs[j] = q[j, i] + np.matmul(P[j, i, :], v[:, t - 1])
+            rhs[j] = q[j, i] + beta*np.matmul(P[j, i, :], v[:, t - 1])
         v[i, t] = max(rhs)
         d[i, t] = np.argmax(rhs)
 
@@ -119,7 +120,7 @@ for i in range(len(states)):
     column = eval(d.iloc[-1].index[i])[1]
     plot_data[row, column] = d.iloc[-1, i]
 
-plt.plot(plot_data)
+plt.plot(plot_data, drawstyle='steps')
 plt.xlabel('Scoops Available, s')
 plt.xticks(ticks=s)
 plt.ylabel('Optimal Policy - Scoops Saved')
@@ -136,7 +137,7 @@ for i in range(len(states)):
     column = eval(d.iloc[-1].index[i])[1]
     plot_data[row, column] = row - d.iloc[-1, i]
 
-plt.plot(plot_data)
+plt.plot(plot_data, drawstyle='steps')
 plt.xlabel('Scoops Available, s')
 plt.xticks(ticks=s)
 plt.ylabel('Optimal Policy - Scoops Eaten')
@@ -144,55 +145,163 @@ plt.yticks(a)
 plt.legend(e)
 plt.title('Scoops Available vs Scoops Eaten')
 plt.show();
+# %%
+P_optim = np.array([P[j, i, :] for (i, j) in enumerate(d.iloc[-1].astype('int'))])
+R_optim = np.array([R[j, i, :] for (i, j) in enumerate(d.iloc[-1].astype('int'))])
 # %% [markdown]
 # - **Simulate a sequence of $e$ and set an initial value for $s$. Given the optimal policy, calculate and plot the evolution of $a, c,$ and $s$ over time.**
+# %%
+p_e_dat = pd.DataFrame(p_e)
+T = 600
+plot_data = pd.DataFrame(np.zeros((T, 5), dtype=np.float64),
+                        columns = ['State', 'a', 'c', 'State_new', 's'])
+state = random.choice(states)
+for i in range(T):
+    s_sim = eval(state)[0]
+    e_sim = eval(state)[1]
+    a_sim = d.iloc[-1][state]
+    
+    c_sim = s_sim - a_sim
+    r_sim = np.log(c_sim + 1)
+    
+    rand_num = np.random.uniform(low=0.0, high=1.0)
+    e_new = pd.Series(e)[p_e_dat.iloc[e_sim, :].cumsum().ge(rand_num)].iloc[0]
+    s_new = a_sim + e_new
+    state_new = f'({int(s_new)}, {int(e_new)})'
+    
+    plot_data.iloc[i, :] = [state, a_sim, c_sim, state_new, s_sim]
+    state = state_new
+# %%
+plt.plot(plot_data['a'], drawstyle='steps')
+plt.yticks(a)
+plt.xlabel('Step')
+plt.ylabel('Scoops Saved, a')
+plt.title('Scoops Saved per Iteration')
+plt.show();
+# %%
+plt.plot(plot_data['c'], drawstyle='steps')
+plt.yticks(a)
+plt.xlabel('Step')
+plt.ylabel('Scoops Eaten, c')
+plt.title('Scoops Eaten per Iteration')
+plt.show();
+# %%
+plt.plot(plot_data['s'], drawstyle='steps')
+plt.yticks(s)
+plt.xlabel('Step')
+plt.ylabel('Scoops Available, s')
+plt.title('Scoops Available per Iteration')
+plt.show();
+# %% [markdown]
+# - **Construct the transition probability and reward matrices between $(s,e)$ and $(s′,e′)$ that produces the highest expected discount rewards. (hint: you need to use the optimal policy)**
+# %%
+P_optim = pd.DataFrame(
+    np.array([P[j, i, :] for (i, j) in enumerate(d.iloc[-1].astype('int'))]),
+    columns=states,
+    index=states)
+R_optim = pd.DataFrame(
+    np.array([R[j, i, :] for (i, j) in enumerate(d.iloc[-1].astype('int'))]),
+    columns=states,
+    index=states)
+print('Optimal Transition Matrix:\n')
+P_optim
+print('Optimal Reward Matrix:\n')
+R_optim
+# %% [markdown]
+# - **Calculate the value function for the Markov process with rewards that produces the highest expected discount rewards. (hint: use the transition probability and reward matrices from the previous question). Does the value function matches reasonably the value function from the previous question? (hint: it should)**
+# %%
+q_sim = np.zeros(len(s) * len(e), dtype=np.float64)
+
+for j in range(len(s) * len(e)):
+    q_sim[j] = np.nan_to_num(np.dot(P_optim.iloc[j, :], R_optim.iloc[j, :]), nan=-math.inf)
+
+T = 600
+beta = 0.98
+v_sim = np.zeros((len(states), T + 1),dtype=np.float64)
+d_sim = np.zeros((len(states), T + 1),dtype=np.float64)
+
+for t in range(1, T + 1):
+    for i in range(len(states)):
+        rhs = q_sim[i] + beta*np.matmul(P_optim.iloc[i, :], v_sim[:, t - 1])
+        v_sim[i, t] = rhs
+
+v_sim = pd.DataFrame(v_sim.T, columns=states)
+# %% [markdown]
+# - **Simulate the Markov process with rewards from the previous question for starting at each state pair $(e,s)$. Compute the average discounted reward. Does it match reasonabily close to the value function in the previous question? (hint: it should)**
 # %%
 try:
     sim_data = joblib.load('sim_data.pkl')
 except:
-    p_e_dat = pd.DataFrame(p_e)
-    T = 100
-    sim_data = pd.DataFrame(np.zeros((T*T, 5), dtype=np.float64),
-                            columns = ['State', 'a', 'c', 'State_new', 'Reward'])
-    for i in range(T):
-        state = random.choice(['(0, 1)', '(0, 2)', '(1, 2)', '(3, 0)', '(4, 0)', '(4, 1)'])
-        for j in range(T):
-            s_sim = eval(state)[0]
-            e_sim = eval(state)[1]
-            a_sim = d.iloc[-1][state]
-            
+    T = 1000
+    j = 0
+    sim_data = pd.DataFrame(np.zeros((len(states)*T, 8), dtype=np.float64),
+                            columns = ['State_sim_start', 'State_init', 's', 'e', 'a', 'c', 'State_new', 'Reward'])
+    beta = 0.98
+    for state in states:
+        state_start = state
+        state_sim = state
+        for i in range(T):
+            s_sim = eval(state_sim)[0]
+            e_sim = eval(state_sim)[1]
+            a_sim = d.iloc[-1][state_sim]
             c_sim = s_sim - a_sim
-            r_sim = np.log(c_sim + 1)
-            
+
             rand_num = np.random.uniform(low=0.0, high=1.0)
-            e_new = pd.Series(e)[p_e_dat.iloc[e_sim, :].cumsum().ge(rand_num)].iloc[0]
-            s_new = a_sim + e_new
-            state_new = f'({int(s_new)}, {int(e_new)})'
-            
-            sim_data.iloc[i*T+j, :] = [state, a_sim, c_sim, state_new, r_sim]
-            state = state_new
+            r_sim = beta**i * R_optim.loc[state_sim, P_optim.loc[state_sim, :].cumsum().ge(rand_num)][0]
+            state_new = np.array(states)[P_optim.loc[state_sim, :].cumsum().ge(rand_num)][0]
+
+            sim_data.iloc[j*T+i, :] = [state_start, state_sim, s_sim, e_sim, a_sim, c_sim, state_new, r_sim]
+
+            state_sim = state_new
+        j+=1
     joblib.dump(sim_data, 'sim_data.pkl')
 
-# %%
-plt.plot(sim_data['a']);
-# %%
-plt.plot(sim_data['c']);
-# %%
-plt.plot([eval(x)[0] for x in sim_data['State']]);
-# %% [markdown]
-# - **Construct the transition probability and reward matrices between $(s,e)$ and $(s′,e′)$ that produces the highest expected discount rewards. (hint: you need to use the optimal policy)**
-# %%
-P_sim = pd.crosstab(sim_data['State'], sim_data['State_new']).div(pd.crosstab(sim_data['State'], sim_data['State_new']).sum(axis=1), axis=0)
-P_sim[[x for x in states if x not in P_sim.columns]] = 0
-P_sim = P_sim[states]
-# %% [markdown]
-# - **Calculate the value function for the Markok process with rewards that produces the highest expected discount rewards. (hint: use the transition probability and reward matrices from the previous question). Does the value function matches reasonably the value function from the previous question? (hint: it should)**
-# %%
+v_sim_2 = sim_data[['State_sim_start', 'Reward']].groupby('State_sim_start').sum()
 
-# %% [markdown]
-# - **Simulate the Markov process with rewards from the previous question for starting at each state pair $(e,s)$. Compute the average discounted reward. Does it match reasonabily close to the value function in the previous question? (hint: it should)**
-# %%
+table_comp = pd.DataFrame(v.iloc[-1].T).merge(
+    pd.DataFrame(v_sim.iloc[-1].T),
+    left_index=True, 
+    right_index=True).merge(
+        v_sim_2, 
+        left_index=True, 
+        right_index=True)
+table_comp.columns = ['Value Iteration', 'Value Optimal Policy', 'Simulated Average Reward']
+table_comp
 
 # %% [markdown]
 # - **Calculate the optimal policy based on the policy iteration approach.**
 # %%
+q = np.zeros((len(a), len(s) * len(e)), dtype=np.float64)
+qq = np.zeros(len(s) * len(e), dtype=np.float64)
+
+for i in a:
+    for j in range(len(s) * len(e)):
+        q[i, j] = np.nan_to_num(np.dot(P[i, j, :], R[i, j, :]), nan=-math.inf)
+
+T = 600
+beta = 0.98
+v = np.zeros((len(states), T + 1),dtype=np.float64)
+d = np.zeros((len(states), T + 1),dtype=np.float64)
+
+for t in range(1, T + 1):
+    for i in range(len(states)):
+        rhs = np.zeros(len(a), dtype=np.float64)
+        for j in a:
+            rhs[j] = q[j, i] + beta*np.matmul(P[j, i, :], v[:, t - 1])
+        v[i, t] = max(rhs)
+        d[i, t] = np.argmax(rhs)
+
+    PP = np.array([P[j, i, :] for (i, j) in enumerate(d[:, t].astype('int'))])
+    A = np.concatenate((np.identity(len(states)) - PP, np.ones((len(states), 1))), axis=1)
+    # A = np.identity(len(states)) - PP
+    A = np.delete(A, len(states)-1, 1)
+    
+    qq = np.array([q[j, i] for (i, j) in enumerate(d[:, t].astype('int'))])
+    tmp = np.matmul(np.linalg.inv(A), qq)
+    g = tmp[len(states)-1]
+    tmp[len(states)-1] = 0
+    v[:, t] = tmp.T
+    
+v = pd.DataFrame(v.T, columns=states)
+d = pd.DataFrame(d.T, columns=states)
+d.iloc[-1]
