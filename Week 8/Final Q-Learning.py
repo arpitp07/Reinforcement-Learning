@@ -80,8 +80,48 @@ for i in range(len(A)):
         for k in range(len(P_ind)):
             curr = eval(P_ind[j])
             next = eval(P_ind[k])
-            R[i, j, k] = (-(curr[0] - 1)**2 + 2 - (10 * curr[2]) - abs(list(A)[i])) * 0.1
+            R[i, j, k] = (-(curr[0] - 1)**2 + 2 -
+                          (10 * curr[2]) - abs(list(A)[i])) * 0.1
     term_dry = [eval(x)[0] == min(S) for x in P_ind]
     term_wet = [eval(x)[0] == max(S) for x in P_ind]
-    R[i, term_dry, :] = [-np.inf] * len(term_dry)
-    R[i, term_wet, :] = [-np.inf] * len(term_dry)
+    R[i, term_dry, :] = [-100] * len(term_dry)
+    R[i, term_wet, :] = [-100] * len(term_wet)
+# %%
+LEARNING_RATE = 0.1
+DISCOUNT = 0.99
+EPISODES = 2000
+DAYS_TILL_HARVEST = 50
+
+epsilon = 1
+START_EPSILON_DECAYING = 1
+END_EPSILON_DECAYING = EPISODES // 2
+epsilon_decay_value = epsilon / (END_EPSILON_DECAYING - START_EPSILON_DECAYING)
+
+q_table = np.random.uniform(low=-10, high=0.5, size=(len(P_ind), len(A)))
+
+for episode in range(EPISODES):
+    state = np.random.choice(P_ind)
+    for day in range(DAYS_TILL_HARVEST):
+        if np.random.random() > epsilon:
+            action = np.argmax(q_table[P_ind.index(state)])
+        else:
+            action = np.random.randint(0, len(A))
+        
+        rand_num = np.random.random()
+        P_cur = pd.DataFrame(P[action], index=P_ind, columns=P_ind)
+        state_new = pd.Series(P_ind)[P_cur.loc[state, :].cumsum().ge(rand_num).tolist()].iloc[0]
+        
+        reward = R[action, P_ind.index(state), P_ind.index(state_new)]
+        
+        max_future_q = np.max(q_table[P_ind.index(state_new)])
+        current_q = q_table[P_ind.index(state), action]
+        new_q = (1 - LEARNING_RATE) * current_q + LEARNING_RATE * (reward + DISCOUNT * max_future_q)
+        
+        q_table[P_ind.index(state), action] = new_q
+        state = state_new
+        if eval(state)[0] in [min(S), max(S)]:
+            break
+    if END_EPSILON_DECAYING >= episode >= START_EPSILON_DECAYING:
+        epsilon -= epsilon_decay_value
+# %%
+policy = pd.Series(q_table.argmax(axis=1) - 1, index=P_ind)
