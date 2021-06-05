@@ -1,28 +1,50 @@
 # %%
+# %% [markdown]
+# # Reinforcement Learning
+# ## Final Project - The Lazy Gardener
+# ### Contributors:
+# - Nina Randorf
+# - Remy Zhong
+# - Arpit Parihar
+# %% [markdown]
+# ### Importing modules
+# %%
 import numpy as np
 import pandas as pd
-
+# %% [markdown]
+# ### Declare environment constants and transition matrices
 # %%
+# Dictionaries to keep track of weather, bunny and actions
 W = {0: 'Sunny', 1: 'Rainy', 2: 'Stormy'}
 B = {0: 'No_Bunny', 1: 'Bunny'}
 A = {-1: 'Sand', 0: 'Nothing', 1: 'Water'}
 
+# List of possible saturation states
+S = list(range(-1, 6))
+
+# Weather to weather transition matrix
 P_weather = pd.DataFrame(
     {
         0: [0.75, 0.3, 0.4],
         1: [0.2, 0.5, 0.4],
         2: [0.05, 0.2, 0.2]
     })
+
+# Weather to bunny transition matrix
 P_bunny = pd.DataFrame(
     {
         0: [0.2, 0.8],
         1: [0.6, 0.4],
         2: [0.9, 0.1]
     })
+# %% [markdown]
+# ### Combine bunny and weather matrices
 # %%
+# Creating index (weather, bunny) and initializing bunny/weather transition matrix
 ind = [f'({x}, {y})' for y in P_bunny.index for x in P_weather.index]
 P_bw = pd.DataFrame(columns=ind, index=ind)
-# pattern = re.compile(r'[\(\) ]')
+
+# Populating the bunny/weather matrix
 for row in P_bw.index:
     for col in P_bw.columns:
         i = eval(row)
@@ -30,10 +52,13 @@ for row in P_bw.index:
         P_bw.loc[row, col] = P_weather.loc[i[0], j[0]] * \
             P_bunny.loc[j[1], j[0]]
 # %% [markdown]
-# $s' = s - 1 + w' + a$
+# ### Creating current state to future state matrix based on possible transitions:
+# $$s' = s - 1 + w' + a$$
 # %%
-S = list(range(-1, 6))
+# Initializing a tensor with dimensions len(A) * len(S) * len(S)
 P_s = np.zeros((len(A), len(S), len(S)), dtype=float)
+
+# Calculating possible states based on the expression for s'
 for i in A:
     for j in S:
         for k in W:
@@ -42,6 +67,8 @@ for i in A:
                 P_s[list(A).index(i), S.index(j), S.index(s_new)] = 1
             except:
                 continue
+# %% [markdown]
+# ### Combining state, weather and bunny matrices into final transition matrix
 # %%
 P_ind = [f'({x}, {eval(y)[0]}, {eval(y)[1]})' for y in ind for x in S]
 
@@ -64,7 +91,8 @@ for i in range(len(P_list)):
             if np.clip(row[0] - 1 + col[1] + list(A)[i], min(S), max(S)) == col[0]:
                 P_list[i].loc[j, k] = P_s[i, S.index(row[0]), S.index(col[0])] * \
                     P_bw.loc[f'({row[1]}, {row[2]})', f'({col[1]}, {col[2]})']
-    # add terminal state conditions here
+    
+    # Terminal state conditions - plant dies at saturation -1 and 5
     term_dry = [eval(x)[0] == min(S) for x in P_ind]
     term_wet = [eval(x)[0] == max(S) for x in P_ind]
     P_list[i].iloc[term_dry, :] = [1] + [0] * (len(term_dry) - 1)
@@ -125,3 +153,27 @@ for episode in range(EPISODES):
         epsilon -= epsilon_decay_value
 # %%
 policy = pd.Series(q_table.argmax(axis=1) - 1, index=P_ind)
+# %%
+class garden_env():
+    def __init__(self, W, B, A, S, P_weather, P_bunny):
+        self.W = W
+        self.B = B
+        self.A = A
+        self.S = S
+        self.P_weather = P_weather
+        self.P_bunny = P_bunny
+        
+    def create_P_bw(self):
+        # Creating index (weather, bunny) and initializing bunny/weather transition matrix
+        ind = [f'({x}, {y})' for y in self.P_bunny.index for x in self.P_weather.index]
+        self.P_bw = pd.DataFrame(columns=ind, index=ind)
+
+        # Populating the bunny/weather matrix
+        for row in self.P_bw.index:
+            for col in self.P_bw.columns:
+                i = eval(row)
+                j = eval(col)
+                self.P_bw.loc[row, col] = self.P_weather.loc[i[0], j[0]] * \
+                    self.P_bunny.loc[j[1], j[0]]
+        
+        return self.P_bw
