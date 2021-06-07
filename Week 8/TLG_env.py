@@ -16,6 +16,7 @@ class garden_env():
         self.state = None
         self.reward = None
         self.reset_env()
+    
     # Method to create index (weather, bunny)
     
     def create_P_bw(self):
@@ -57,7 +58,7 @@ class garden_env():
                     len(self.S) * len(self.W) * len(self.B)),
                 dtype=float),
             index=P_ind, columns=P_ind)
-        P_list = [P_df.copy() for x in range(len(self.A))]
+        P_list = [P_df.copy() for _ in range(len(self.A))]
 
         for i in range(len(P_list)):
             for j in P_df.index:
@@ -69,30 +70,20 @@ class garden_env():
                             self.P_bw.loc[f'({row[1]}, {row[2]})', f'({col[1]}, {col[2]})']
             
             # Terminal state conditions - plant dies at saturation -1 and 5
-            term_dry = [eval(x)[0] == min(self.S) for x in P_ind]
-            term_wet = [eval(x)[0] == max(self.S) for x in P_ind]
-            P_list[i].iloc[term_dry, :] = [1] + [0] * (len(term_dry) - 1)
-            P_list[i].iloc[term_wet, :] = [0] * (len(term_wet) - 1) + [1]
+            # term_dry = [eval(x)[0] == min(self.S) for x in P_ind]
+            # term_wet = [eval(x)[0] == max(self.S) for x in P_ind]
+            # P_list[i].iloc[term_dry, :] = [1] + [0] * (len(term_dry) - 1)
+            # P_list[i].iloc[term_wet, :] = [0] * (len(term_wet) - 1) + [1]
+            # P_list[i].iloc[term_dry, :] = np.identity(len(P_ind))[term_dry]
+            # P_list[i].iloc[term_wet, :] = np.identity(len(P_ind))[term_wet]
+            terminal = [eval(x)[0] in [min(self.S), max(self.S)] for x in P_ind]
+            P_list[i].iloc[terminal, :] = np.identity(len(P_ind))[terminal]
 
         P = np.stack((P_list[0], P_list[1], P_list[2]))
         
         return P_ind, P
     
-    def create_R_final(self):
-        # R = np.zeros_like(self.P)
-
-        # for i in range(len(self.A)):
-        #     for j in range(len(self.P_ind)):
-        #         for k in range(len(self.P_ind)):
-        #             curr = eval(self.P_ind[j])
-        #             # next = eval(self.P_ind[k])
-        #             R[i, j, k] = (-(curr[0] - 1)**2 + 2 -
-        #                         (10 * curr[2]) - abs(list(self.A)[i])) * 0.1
-        #     term_dry = [eval(x)[0] == min(self.S) for x in self.P_ind]
-        #     term_wet = [eval(x)[0] == max(self.S) for x in self.P_ind]
-        #     R[i, term_dry, :] = [-100] * len(term_dry)
-        #     R[i, term_wet, :] = [-100] * len(term_wet)
-        
+    def create_R_final(self):        
         R = np.zeros((len(self.A), len(self.P_ind)))
         for ind_A, i in enumerate(self.A):
             for ind_S, k in enumerate(self.P_ind):
@@ -102,6 +93,7 @@ class garden_env():
     
     def reset_env(self):
         self.state = np.random.choice(self.P_ind)
+        # self.state = np.random.choice([x for x in self.P_ind if eval(x)[0] not in [min(self.S), max(self.S)]])
         # return state
     
     def step(self, action):
@@ -136,6 +128,6 @@ if __name__ == '__main__':
         })
 
     QL_Agent = garden_env(W, B, A, S, P_weather, P_bunny)
-    QL_Agent.step(-1)
+    QL_Agent.step(0)
     QL_Agent.state
     QL_Agent.reward
