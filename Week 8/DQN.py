@@ -168,9 +168,9 @@ class DQNAgent_2NN:
         return self.model.predict(np.reshape(state, [1, self.state_size]))[0]
 
     def load(self, name):
-        self.model.load_weights('base' + name)
-        self.target_model.load_weights('target' + name)
+        self.model.load_weights('base_' + name)
+        self.target_model.load_weights('target_' + name)
 
     def save(self, name):
-        self.model.save_weights('base' + name)
-        self.target_model.save_weights('target' + name)
+        self.model.save_weights('base_' + name)
+        self.target_model.save_weights('target_' + name)

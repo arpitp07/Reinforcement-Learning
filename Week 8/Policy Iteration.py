@@ -40,7 +40,7 @@ P_BUNNY = pd.DataFrame({0: [0.2, 0.8], 1: [0.6, 0.4], 2: [0.9, 0.1]})
 # %% [markdown]
 #### Creating environment instance for Q-Learning algorithm
 # %%
-env = garden_env(WEATHER, BUNNY, ACTIONS, STATES, P_WEATHER, P_BUNNY)
+env = garden_env(WEATHER, BUNNY, ACTIONS, STATES, P_WEATHER, P_BUNNY, no_term=False)
 # %%
 # Creating q vector
 q = np.zeros((len(ACTIONS), len(env.P_ind)), dtype=np.float64)

@@ -40,17 +40,17 @@ P_BUNNY = pd.DataFrame({0: [0.2, 0.8], 1: [0.6, 0.4], 2: [0.9, 0.1]})
 # %% [markdown]
 #### Creating environment instance for Q-Learning algorithm
 # %%
-env = garden_env(WEATHER, BUNNY, ACTIONS, STATES, P_WEATHER, P_BUNNY)
+env = garden_env(WEATHER, BUNNY, ACTIONS, STATES, P_WEATHER, P_BUNNY, no_term=False)
 # %% [markdown]
 #### Declaring algorithm constants
 # %%
-LEARNING_RATE = 0.1
+LEARNING_RATE = 0.2
 DISCOUNT = 0.99
 EPISODES = 20000
 DAYS_TILL_HARVEST = 50
 HARVEST_REWARD = 50
 
-epsilon = 0.1
+epsilon = 0.5
 START_EPSILON_DECAYING = 1
 END_EPSILON_DECAYING = EPISODES // 2
 epsilon_decay_value = epsilon / (END_EPSILON_DECAYING - START_EPSILON_DECAYING)
@@ -59,7 +59,8 @@ epsilon_decay_value = epsilon / (END_EPSILON_DECAYING - START_EPSILON_DECAYING)
 #### Algorithm loop
 # %%
 try:
-    q_table = joblib.load("Q_Table.pkl")
+    q_table = joblib.load("Files/Q_Table.pkl")
+    print("Q table loaded from disk")
 except:
     # Random initialization
     q_table = np.random.uniform(low=-0.5, high=0.5, size=(len(env.P_ind), len(env.A)))
@@ -105,7 +106,8 @@ except:
             epsilon -= epsilon_decay_value
 
     # Save Q-table
-    joblib.dump(q_table, "Q_Table.pkl")
+    _ = joblib.dump(q_table, "Files/Q_Table.pkl")
+    print("Q table saved to disk")
 # %% [markdown]
 #### Displaying final Q-table and policy
 # %%
@@ -113,6 +115,7 @@ except:
 Q_table_final = pd.DataFrame(q_table, columns=(env.A.values()), index=env.P_ind)
 
 # Obtain policy from Q-table
+q_values = pd.Series([x for x in q_table.max(axis=1)], index=env.P_ind)
 policy = pd.Series([x for x in q_table.argmax(axis=1)], index=env.P_ind)
 Q_table_final["Policy_QLearning"] = pd.Series(
     [env.A[x] for x in q_table.argmax(axis=1) - 1], index=env.P_ind
@@ -122,3 +125,80 @@ Q_table_final.loc[[eval(x)[0] not in [min(env.S), max(env.S)] for x in env.P_ind
 # %% [markdown]
 #### Policy evaluation
 # %%
+env = garden_env(WEATHER, BUNNY, ACTIONS, STATES, P_WEATHER, P_BUNNY, no_term=True)
+episode_tracker = pd.DataFrame(columns=["Pump", "Rest", "Water", "Reward", "Died"])
+
+try:
+    episode_tracker = joblib.load("Files/Q_sim_episode_tracker.pkl")
+    print("Episode tracker loaded from disk")
+except:
+    for episode in range(1000):
+        env.reset_env()
+        state = env.state
+        episode_stats = {"Pump": 0, "Rest": 0, "Water": 0, "Reward": 0, "Died": 0}
+        for day in range(DAYS_TILL_HARVEST):
+            env.step(policy.loc[state])
+            future_state = env.state
+            episode_stats["Reward"] += (
+                env.reward
+                if day < DAYS_TILL_HARVEST - 1
+                else env.reward + HARVEST_REWARD
+            )
+            episode_stats[env.A[policy.loc[state] - 1]] += 1
+            state = future_state
+            if eval(future_state)[0] in [min(env.S), max(env.S)]:
+                episode_stats["Died"] += 1
+                break
+        episode_tracker = episode_tracker.append(episode_stats, ignore_index=True)
+    _ = joblib.dump(episode_tracker, "Files/Q_sim_episode_tracker.pkl")
+    print("Episode tracker saved to disk")
+episode_tracker.mean()
+# %% [markdown]
+#### Visualizations - Value and Policy
+# %%
+plot_df = pd.DataFrame(
+    columns=env.P_bw.index, index=set(env.S) - set([min(env.S), max(env.S)])
+)
+for i in [(x,) + eval(y) for x in plot_df.index for y in plot_df.columns]:
+    plot_df.loc[i[0], f"{i[1:]}"] = q_values.loc[f"{i}"]
+
+col = ["orange", "skyblue", "darkblue"] * 2
+linestyle = ["-"] * 3 + ["dotted"] * 3
+_ = plt.figure()
+for (i, j) in enumerate(plot_df.columns):
+    _ = plt.plot(
+        plot_df[j], color=col[i], linestyle=linestyle[i], label="(w, b) = " + j
+    )
+
+_ = plt.ylabel("Value")
+_ = plt.xlabel("Saturation level")
+_ = plt.title("Q value for every saturation level within a state (w, b)")
+_ = plt.xticks(plot_df.index)
+_ = plt.legend(bbox_to_anchor=(1.02, 1))
+_ = plt.show()
+# %%
+plot_df = pd.DataFrame(
+    columns=env.P_bw.index, index=set(env.S) - set([min(env.S), max(env.S)])
+)
+for i in [(x,) + eval(y) for x in plot_df.index for y in plot_df.columns]:
+    plot_df.loc[i[0], f"{i[1:]}"] = policy.loc[f"{i}"]
+
+col = ["orange", "skyblue", "darkblue"] * 2
+linestyle = ["-"] * 3 + ["dotted"] * 3
+_ = plt.figure()
+for (i, j) in enumerate(plot_df.columns):
+    _ = plt.plot(
+        plot_df[j],
+        color=col[i],
+        linestyle=(linestyle[i]),
+        label="(w, b) = " + j,
+        drawstyle="steps",
+    )
+
+_ = plt.ylabel("Action")
+_ = plt.xlabel("Saturation level")
+_ = plt.title("Optimal policy for every saturation level within a state (w, b)")
+_ = plt.xticks(plot_df.index)
+_ = plt.yticks(sorted(policy.unique()), env.A.values())
+_ = plt.legend(bbox_to_anchor=(1.02, 1))
+_ = plt.show()
